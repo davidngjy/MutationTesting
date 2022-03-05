@@ -26,10 +26,7 @@ WORKDIR /src
 RUN dotnet new tool-manifest
 RUN dotnet tool install dotnet-stryker
 
-#WORKDIR /src/MutationTesting.Web.Test.UnitTests
-#ENTRYPOINT ["/bin/sh", "-c", \
-#		"(cd MutationTesting.Web.Test.UnitTests && dotnet stryker) && (cd MutationTesting.Business.Test.UnitTests && dotnet stryker)"]
-CMD (cd MutationTesting.Web.Test.UnitTests && dotnet stryker) ; \
+CMD (cd MutationTesting.Web.Test.UnitTests && dotnet stryker) && \
 	(cd MutationTesting.Business.Test.UnitTests && dotnet stryker)
 
 FROM build AS publish

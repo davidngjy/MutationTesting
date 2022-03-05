@@ -1,0 +1,79 @@
+stages:
+- stage: build_and_test_stage
+  displayName: Build and Execute Tests
+  jobs:
+  - job: execute_unit_tests_job
+    displayName: Execute Unit Tests Job
+    steps:
+    - task: DockerCompose@0
+      displayName: Execute Unit Tests
+      inputs:
+        action: Run services
+        arguments: mutationtesting.web
+        dockerComposeFile: MutatingTesting/docker-compose.yml
+        additionalDockerComposeFiles: docker-compose.unit-tests.yml
+        qualifyImageNames: false
+        detached: false
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Unit Tests Result
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: $(Agent.BuildDirectory)/TestResults
+        artifactName: UnitTestResults
+
+  - job: execute_mutation_tests_job
+    displayName: Execute Mutation Tests Job
+    steps:
+    - task: DockerCompose@0
+      displayName: Execute Mutation Tests
+      inputs:
+        action: Run services
+        arguments: mutationtesting.web
+        dockerComposeFile: MutatingTesting/docker-compose.yml
+        additionalDockerComposeFiles: docker-compose.mutation-tests.yml
+        qualifyImageNames: false
+        detached: false
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Mutation Test Reports
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: $(Agent.BuildDirectory)/StrykerOutput
+        artifactName: MutationTestReports
+
+- stage: publish_test_artifacts_stage
+  displayName: Publish Test Artifacts
+  dependsOn: build_and_test_stage
+  condition: succeededOrFailed()
+  jobs:
+  - job: publish_unittest_results_job
+    displayName: Publish Unit Test Results Job
+    steps: 
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Unit Test Results
+      inputs:
+        patterns: |
+          **/coverage.cobertura.xml
+          **/*.trx
+        path: $(Common.TestResultsDirectory)/UnitTestResults
+
+    - task: PublishTestResults@2
+      displayName: Publish Unit Test Results
+      inputs:
+        testRunner: VSTest
+        testResultsFiles: $(Common.TestResultsDirectory)/UnitTestResults/**/*.trx
+
+  - job: publish_mutationtest_report_job
+    displayName: Publish Mutation Test Report Job
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Mutation Test Report
+      inputs:
+        patterns: '**/*.html'
+        path: $(Common.TestResultsDirectory)/MutationTestReports
+
+    - task: PublishMutationReport@1
+      displayName: Publish Mutation Test Report
+      inputs:
+        reportPattern: $(Common.TestResultsDirectory)/MutationTestReports/**/mutation-report.html
