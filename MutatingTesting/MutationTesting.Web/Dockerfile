@@ -12,6 +12,19 @@ COPY . .
 WORKDIR "/src/MutationTesting.Web"
 RUN dotnet build "MutationTesting.Web.csproj" -c Release -o /app/build
 
+FROM build AS tests
+WORKDIR /src
+RUN dotnet new sln -n MutationTesting.UnitTests
+RUN dotnet sln MutationTesting.UnitTests.sln add MutationTesting.*.Test.UnitTests
+RUN dotnet restore MutationTesting.UnitTests.sln
+RUN dotnet build MutationTesting.UnitTests.sln
+
+FROM tests AS unittests
+ENTRYPOINT ["dotnet", "test", "MutationTesting.UnitTests.sln", "--logger:trx", "--collect:XPlat Code Coverage", "--results-directory:./TestResults"]
+
+#FROM tests AS mutationtests
+
+
 FROM build AS publish
 RUN dotnet publish "MutationTesting.Web.csproj" -c Release -o /app/publish
 

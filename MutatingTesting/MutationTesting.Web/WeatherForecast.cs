@@ -1,6 +1,6 @@
 namespace MutationTesting.Web
 {
-	internal class WeatherForecast
+	public class WeatherForecast
 	{
 		public DateTime Date { get; set; }
 

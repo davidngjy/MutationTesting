@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  mutationtesting.web:
+    build:
+      target: unittests
+    volumes:
+      - ${AGENT_BUILDDIRECTORY:-.}/TestResults:/src/TestResults
