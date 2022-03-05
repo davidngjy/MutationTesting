@@ -2,9 +2,47 @@ stages:
 - stage: build_and_test_stage
   displayName: Build and Execute Tests
   jobs:
+  - job: build_service_job
+    displayName: Build Main Service Job
+    steps:
+    - task: Cache@2
+      displayName: Setup Cache
+      inputs:
+        key: 'docker | "$(Agent.OS)" | cache'
+        path: $(Pipeline.Workspace)/docker
+
+    - task: DockerCompose@0
+      displayName: Build Main Service
+      inputs:
+        action: Build services
+        dockerComposeFile: MutatingTesting/docker-compose.yml
+
+    - task: PowerShell@2
+      displayName: Export Docker Image
+      inputs:
+        targetType: inline
+        script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker save -o $(Pipeline.Workspace)/docker/mutationtesting.tar mutationtesting.web
+      
   - job: execute_unit_tests_job
     displayName: Execute Unit Tests Job
+    dependsOn: build_service_job
     steps:
+    - task: Cache@2
+      displayName: Setup Cache
+      inputs:
+        key: 'docker | "$(Agent.OS)" | cache'
+        path: $(Pipeline.Workspace)/docker
+        cacheHitVar: CACHE_RESTORED
+
+    - task: PowerShell@2
+      displayName: Load Cached Docker Image
+      condition: eq(variables.CACHE_RESTORED, 'true')
+      inputs:
+        targetType: inline
+        script: docker load -i $(Pipeline.Workspace)/docker/mutationtesting.tar
+
     - task: DockerCompose@0
       displayName: Execute Unit Tests
       inputs:
@@ -24,7 +62,22 @@ stages:
 
   - job: execute_mutation_tests_job
     displayName: Execute Mutation Tests Job
+    dependsOn: build_service_job
     steps:
+    - task: Cache@2
+      displayName: Setup Cache
+      inputs:
+        key: 'docker | "$(Agent.OS)" | cache'
+        path: $(Pipeline.Workspace)/docker
+        cacheHitVar: CACHE_RESTORED
+
+    - task: PowerShell@2
+      displayName: Load Cached Docker Image
+      condition: eq(variables.CACHE_RESTORED, 'true')
+      inputs:
+        targetType: inline
+        script: docker load -i $(Pipeline.Workspace)/docker/mutationtesting.tar
+
     - task: DockerCompose@0
       displayName: Execute Mutation Tests
       inputs:
