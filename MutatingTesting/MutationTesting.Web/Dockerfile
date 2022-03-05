@@ -6,24 +6,31 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+COPY ["MutationTesting.Business/MutationTesting.Business.csproj", "MutationTesting.Business/"]
 COPY ["MutationTesting.Web/MutationTesting.Web.csproj", "MutationTesting.Web/"]
 RUN dotnet restore "MutationTesting.Web/MutationTesting.Web.csproj"
 COPY . .
 WORKDIR "/src/MutationTesting.Web"
 RUN dotnet build "MutationTesting.Web.csproj" -c Release -o /app/build
 
-FROM build AS tests
+FROM build AS unittests
 WORKDIR /src
 RUN dotnet new sln -n MutationTesting.UnitTests
 RUN dotnet sln MutationTesting.UnitTests.sln add MutationTesting.*.Test.UnitTests
 RUN dotnet restore MutationTesting.UnitTests.sln
 RUN dotnet build MutationTesting.UnitTests.sln
-
-FROM tests AS unittests
 ENTRYPOINT ["dotnet", "test", "MutationTesting.UnitTests.sln", "--logger:trx", "--collect:XPlat Code Coverage", "--results-directory:./TestResults"]
 
-#FROM tests AS mutationtests
+FROM build AS mutationtests
+WORKDIR /src
+RUN dotnet new tool-manifest
+RUN dotnet tool install dotnet-stryker
 
+#WORKDIR /src/MutationTesting.Web.Test.UnitTests
+#ENTRYPOINT ["/bin/sh", "-c", \
+#		"(cd MutationTesting.Web.Test.UnitTests && dotnet stryker) && (cd MutationTesting.Business.Test.UnitTests && dotnet stryker)"]
+CMD (cd MutationTesting.Web.Test.UnitTests && dotnet stryker) ; \
+	(cd MutationTesting.Business.Test.UnitTests && dotnet stryker)
 
 FROM build AS publish
 RUN dotnet publish "MutationTesting.Web.csproj" -c Release -o /app/publish

@@ -5,4 +5,5 @@ services:
     build:
       target: mutationtests
     volumes:
-      - ${AGENT_BUILDDIRECTORY:-.}/TestResults:/src/TestResults
+      - ${AGENT_BUILDDIRECTORY:-.}/StrykerOutput:/src/MutationTesting.Web.Test.UnitTests/StrykerOutput
+      - ${AGENT_BUILDDIRECTORY:-.}/StrykerOutput:/src/MutationTesting.Business.Test.UnitTests/StrykerOutput

@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MutationTesting.Web\MutationTesting.Web.csproj" />
+    <ProjectReference Include="..\MutationTesting.Business\MutationTesting.Business.csproj" />
   </ItemGroup>
 
 </Project>
