@@ -16,7 +16,7 @@ stages:
       inputs:
         action: Build services
         dockerComposeFile: MutatingTesting/docker-compose.yml
-        arguments: --no-rm
+        arguments: --no-rm -- mutationtesting.web
 
     - task: PowerShell@2
       displayName: Export Docker Image
