@@ -16,7 +16,6 @@ stages:
       inputs:
         action: Build services
         dockerComposeFile: MutatingTesting/docker-compose.yml
-        arguments: --no-rm -- mutationtesting.web
 
     - task: PowerShell@2
       displayName: Export Docker Image
@@ -48,12 +47,10 @@ stages:
       displayName: Execute Unit Tests
       inputs:
         action: Run services
-        arguments: mutationtesting.web
         dockerComposeFile: MutatingTesting/docker-compose.yml
         additionalDockerComposeFiles: docker-compose.unit-tests.yml
         qualifyImageNames: false
         detached: false
-        buildImages: false
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Unit Tests Result
@@ -84,12 +81,10 @@ stages:
       displayName: Execute Mutation Tests
       inputs:
         action: Run services
-        arguments: mutationtesting.web
         dockerComposeFile: MutatingTesting/docker-compose.yml
         additionalDockerComposeFiles: docker-compose.mutation-tests.yml
         qualifyImageNames: false
         detached: false
-        buildImages: false
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Mutation Test Reports
