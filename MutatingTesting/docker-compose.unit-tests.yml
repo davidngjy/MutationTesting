@@ -4,5 +4,7 @@ services:
   mutationtesting.web:
     build:
       target: unittests
+      cache_from: 
+        - mutationtesting.web
     volumes:
       - ${AGENT_BUILDDIRECTORY:-.}/TestResults:/src/TestResults
