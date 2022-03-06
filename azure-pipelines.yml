@@ -8,7 +8,7 @@ stages:
     - task: Cache@2
       displayName: Setup Cache
       inputs:
-        key: 'docker | "$(Agent.OS)" | cache'
+        key: 'docker | $(Agent.OS) | $(Build.BuildId)'
         path: $(Pipeline.Workspace)/docker
 
     - task: DockerCompose@0
@@ -16,6 +16,7 @@ stages:
       inputs:
         action: Build services
         dockerComposeFile: MutatingTesting/docker-compose.yml
+        arguments: --no-rm
 
     - task: PowerShell@2
       displayName: Export Docker Image
@@ -32,7 +33,7 @@ stages:
     - task: Cache@2
       displayName: Setup Cache
       inputs:
-        key: 'docker | "$(Agent.OS)" | cache'
+        key: 'docker | $(Agent.OS) | $(Build.BuildId)'
         path: $(Pipeline.Workspace)/docker
         cacheHitVar: CACHE_RESTORED
 
@@ -52,6 +53,7 @@ stages:
         additionalDockerComposeFiles: docker-compose.unit-tests.yml
         qualifyImageNames: false
         detached: false
+        buildImages: false
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Unit Tests Result
@@ -67,7 +69,7 @@ stages:
     - task: Cache@2
       displayName: Setup Cache
       inputs:
-        key: 'docker | "$(Agent.OS)" | cache'
+        key: 'docker | $(Agent.OS) | $(Build.BuildId)'
         path: $(Pipeline.Workspace)/docker
         cacheHitVar: CACHE_RESTORED
 
@@ -87,6 +89,7 @@ stages:
         additionalDockerComposeFiles: docker-compose.mutation-tests.yml
         qualifyImageNames: false
         detached: false
+        buildImages: false
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Mutation Test Reports
